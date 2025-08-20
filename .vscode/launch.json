@@ -10,7 +10,10 @@
       "request": "launch",
       "script": "bin/rails s",
       "args": ["-b 0.0.0.0","-p 3000"],
-      "askParameters": false
+      "askParameters": false,
+      "env": {
+        "RAILS_ENV": "development"
+      }
     },
     {
       "type": "rdbg",

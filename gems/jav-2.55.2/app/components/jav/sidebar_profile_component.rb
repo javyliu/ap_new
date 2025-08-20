@@ -1,0 +1,46 @@
+# frozen_string_literal: true
+
+class Jav::SidebarProfileComponent < ViewComponent::Base
+  attr_reader :user
+
+  def initialize(user:)
+    super
+    @user = user
+  end
+
+  def avatar
+    if user.respond_to?(:avatar) && user.avatar.present?
+      user.avatar
+    else
+      ""
+    end
+  end
+
+  def name
+    if user.respond_to?(:name) && user.name.present?
+      user.name
+    elsif user.respond_to?(:email) && user.email.present?
+      user.email
+    else
+      "Jav user"
+    end
+  end
+
+  def title
+    if user.respond_to?(:jav_title) && user.jav_title.present?
+      user.jav_title
+    else
+      ""
+    end
+  end
+
+  def destroy_user_session_path
+    # If `sign_out_path_name` is configured, use it. Otherwise construct the
+    # path name based on `current_user_resource_name`.
+    (Jav.configuration.sign_out_path_name || "destroy_#{Jav.configuration.current_user_resource_name}_session_path").to_sym
+  end
+
+  def can_destroy_user?
+    helpers.main_app.respond_to?(destroy_user_session_path)
+  end
+end

@@ -1,0 +1,8 @@
+class <%= class_name.camelize %> < Jav::Dashboards::PartialCard
+  self.id = "<%= name.underscore %>"
+  self.label = "<%= name.underscore.humanize %>"
+  self.partial = "jav/cards/<%= name.underscore %>"
+  # self.display_header = true
+  # self.cols = 1
+  # self.rows = 1
+end

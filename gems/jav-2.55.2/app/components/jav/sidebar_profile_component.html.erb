@@ -1,0 +1,51 @@
+<div class="text-black border-gray-150 p-4 flex border-t">
+  <div class="flex-1 flex space-x-4">
+    <% if avatar.present? %>
+      <div class="relative aspect-square w-10 h-10 overflow-hidden rounded-sm">
+        <%= image_tag avatar, class: "object-cover min-w-full min-h-full h-full" %>
+      </div>
+    <% end %>
+    <div class="flex flex-col">
+      <div class="font-medium">
+        <%= name %>
+      </div>
+      <% if title.present? %>
+        <div class="text-xs text-gray-500 uppercase">
+          <%= title %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  <div class="relative" data-controller="toggle-panel">
+    <a class="flex items-center h-full cursor-pointer" data-control="profile-dots" data-action="click->toggle-panel#togglePanel">
+      <%= helpers.svg 'three-dots', class: 'h-4' %>
+    </a>
+    <div
+      class="hidden absolute flex flex-col inset-auto right-0 -mt-12 bg-white rounded-sm min-w-[200px] shadow-context -translate-y-full z-40"
+      data-toggle-panel-target="panel"
+    >
+      <% if Jav::App.has_profile_menu? %>
+        <div class="text-black">
+          <% Jav::App.profile_menu.items.each do |item| %>
+            <% if item.is_a? Jav::Menu::Link %>
+              <%= render Jav::ProfileItemComponent.new label: item.name, path: item.path, icon: item.icon, method: item.method, params: item.params %>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+      <%= render "jav/partials/profile_menu_extra" %>
+      <% if can_destroy_user? %>
+        <%= button_to helpers.main_app.send(destroy_user_session_path),
+          form: { "data-turbo" => "false" },
+          method: :delete,
+          data: {
+            confirm: t('jav.are_you_sure')
+          },
+          class: "flex-1 flex items-center justify-center bg-white text-left cursor-pointer text-red-600 font-semibold hover:bg-red-100 block px-4 py-1 w-full py-3 text-center rounded-sm w-full",
+          form_class: 'flex-1' do %>
+          <%= helpers.svg 'logout', class: 'h-4 mr-1' %> <%= t('jav.sign_out') %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>

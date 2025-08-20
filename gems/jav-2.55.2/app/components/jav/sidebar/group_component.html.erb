@@ -1,0 +1,38 @@
+<div class="pb-2 space-y-1"
+  <% if collapsable %>
+    data-controller="menu"
+    data-menu-target="self"
+    data-menu-key-param="<%= key %>"
+    data-menu-default-collapsed-state="<%= collapsed ? 'collapsed' : 'expanded' %>"
+  <% end %>
+>
+  <% if item.name.present? %>
+    <% if collapsable %>
+      <div
+        class="flex justify-between cursor-pointer px-10 pr-2 pt-2 pb-0 text-gray-400"
+        data-action="click->menu#triggerCollapse"
+        data-menu-key-param="<%= key %>"
+      >
+        <div class="flex items-center text-xs uppercase font-semibold leading-none">
+          <%= item.name %>
+        </div>
+        <div class="<%= 'rotate-90' if collapsed %>"
+          data-menu-target="svg"
+          >
+          <%= helpers.svg 'heroicons/outline/chevron-down', class: "h-4 mr-0.5"%>
+        </div>
+      </div>
+    <% else %>
+      <div class="flex justify-between px-10 pr-2 pt-2 pb-0 text-gray-400">
+        <div class="flex items-center text-xs uppercase font-semibold leading-none">
+          <%= item.name %>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+  <div class="w-full space-y-1 <%= 'hidden' if collapsed %>" data-menu-target="items">
+    <% items.each do |item| %>
+      <%= render Jav::Sidebar::ItemSwitcherComponent.new item: item %>
+    <% end %>
+  </div>
+</div>

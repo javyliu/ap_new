@@ -1,0 +1,134 @@
+require_dependency "jav/application_controller"
+
+module Jav
+  class ActionsController < ApplicationController
+    before_action :set_resource_name
+    before_action :set_resource
+    before_action :set_model, only: :show, if: lambda { |request|
+      # Try to se the model only if the user is on the record page.
+      # set_model will fail if it's tried to be used from the Index page.
+      request.params[:id].present?
+    }
+    before_action :set_action, only: %i[show handle]
+
+    def show
+      # Se the view to :new so the default value gets prefilled
+      @view = :new
+
+      @resource.hydrate(model: @model, view: @view, user: _current_user, params: params)
+    end
+
+    def handle
+      resource_ids = action_params[:fields][:jav_resource_ids].split(",")
+      @selected_query = action_params[:fields][:jav_selected_query]
+
+      fields = action_params[:fields].except(:jav_resource_ids, :jav_selected_query)
+
+      args = {
+        fields: fields,
+        current_user: _current_user,
+        resource: resource
+      }
+
+      unless @action.standalone
+        args[:models] = if @selected_query.present?
+                          @resource.model_class.find_by_sql decrypted_query
+                        else
+                          @resource.find_record resource_ids, params: params
+                        end
+      end
+
+      performed_action = @action.handle_action(**args)
+
+      respond performed_action.response
+    end
+
+    private
+
+    def action_params
+      params.permit(:authenticity_token, :resource_name, :action_id, :button, :force_locale, fields: {})
+    end
+
+    def set_action
+      @action = action_class.new(
+        model: @model,
+        resource: @resource,
+        user: _current_user,
+        view: :new, # force the action view to in order to render new-related fields (hidden field)
+        arguments: @resource.get_action_arguments(action_class)
+      )
+    end
+
+    def action_class
+      klass_name = params[:action_id].gsub("jav_actions_", "").camelize
+
+      Jav::BaseAction.descendants.find do |action|
+        action.to_s == klass_name
+      end
+    end
+
+    def respond(response)
+      messages = get_messages response
+      return keep_modal_open(messages) if response[:keep_modal_open]
+
+      response[:type] ||= :reload
+
+      return send_data response[:path], filename: response[:filename] if response[:type] == :download
+
+      respond_to do |format|
+        format.turbo_stream do
+          # Flash the messages collected from the action
+          flash_messages messages
+
+          if response[:type] == :redirect
+            render turbo_stream: turbo_stream.redirect_to(
+              Jav::ExecutionContext.new(target: response[:path]).handle,
+              nil,
+              response[:redirect_args][:turbo_frame],
+              **response[:redirect_args].except(:turbo_frame)
+            )
+          else
+            redirect_back fallback_location: resources_path(resource: @resource)
+          end
+        end
+      end
+    end
+
+    def get_messages(response)
+      default_message = {
+        type: :info,
+        body: I18n.t("jav.action_ran_successfully")
+      }
+
+      return [default_message] if response[:messages].blank?
+
+      response[:messages].reject do |message|
+        # Remove the silent placeholder messages
+        message[:type] == :silent
+      end
+    end
+
+    def decrypted_query
+      Jav::Services::EncryptionService.decrypt(
+        message: @selected_query,
+        purpose: :select_all
+      )
+    end
+
+    def flash_messages(messages)
+      messages.each do |message|
+        flash[message[:type]] = message[:body]
+      end
+    end
+
+    def keep_modal_open(messages)
+      flash_messages messages
+
+      respond_to do |format|
+        format.turbo_stream do
+          render partial: "jav/partials/flash_alerts"
+        end
+      end
+    end
+  end
+end

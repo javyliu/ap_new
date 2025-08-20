@@ -1,0 +1,9 @@
+<%= render Jav::TurboFrameWrapperComponent.new(params[:turbo_frame]) do %>
+  <%= render Jav::Views::ResourceShowComponent.new(
+    resource: @resource,
+    reflection: @reflection,
+    actions: @actions,
+    parent_model: @parent_model,
+    parent_resource: @parent_resource,
+  ) %>
+<% end %>

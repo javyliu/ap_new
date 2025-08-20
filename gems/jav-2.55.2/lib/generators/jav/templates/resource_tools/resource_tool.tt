@@ -1,0 +1,4 @@
+class <%= class_name %> < Jav::BaseResourceTool
+  self.name = "<%= human_name %>"
+  # self.partial = "jav/resource_tools/<%= file_name %>"
+end

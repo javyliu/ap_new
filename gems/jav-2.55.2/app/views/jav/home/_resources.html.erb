@@ -1,0 +1,41 @@
+<%
+  models = begin
+    ApplicationRecord.descendants
+  rescue => exception
+    []
+  end
+%>
+<div>
+  <h3>Resources</h3>
+
+  <div>The primary goal of Jav is to administer your database records. To do that Jav, uses the concept of a <strong>Resource</strong>. Each Jav <strong>Resource</strong> corresponds to a <strong>Rails Model</strong>.</div>
+
+  <% if models.present? %>
+    <div class="mt-2" data-controller="hidden-input">
+      It seems you already have <%= models.count %> <%= 'model'.pluralize models.count %> in your app. You can generate resources for each one with the following commands.
+
+      <strong class="cursor-pointer block mt-2" data-action="click->hidden-input#showContent">Generate resources 👇 (click to reveal)</strong>
+
+      <div class="mt-2 hidden" data-hidden-input-target="content">
+        <% models.each do |model| %>
+          <code class="text-lg"><%= model.to_s %></code>
+          <div>
+            <code class="p-1 rounded-sm bg-sky-500 text-white">bin/rails generate jav:resource <%= model.to_s %></code>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% else %>
+    <div class="mt-2" data-controller="hidden-input">
+      You may generate a resource using the following command:
+      <br>
+
+      <code class="p-1 rounded-sm bg-sky-500 text-white">bin/rails generate jav:resource post</code>
+    </div>
+  <% end %>
+
+  <p>
+    <a href="https://docs.javhq.io/2.0/resources.html" target="_blank" title="Jav Resources documentation">Docs</a>
+  </p>
+</div>
+

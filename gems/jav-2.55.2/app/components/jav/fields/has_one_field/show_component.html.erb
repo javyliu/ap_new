@@ -1,0 +1,34 @@
+<% if @field.value %>
+  <turbo-frame id="<%= @field.turbo_frame %>" src="<%= @field.frame_url %>" target="_top" class="block">
+    <%= render(Jav::LoadingComponent.new(title: @field.name)) %>
+  </turbo-frame>
+<% else %>
+  <%= render Jav::PanelComponent.new(name: @field.name) do |c| %>
+    <% c.with_tools do %>
+      <% if !@field.is_readonly? && !@field.is_disabled? && can_attach? %>
+        <%= a_link attach_path,
+          icon: 'heroicons/outline/link',
+          color: :primary,
+          'data-turbo-frame': 'attach_modal' do %>
+          <%= t('jav.attach_item', item: @field.name.downcase) %>
+        <% end %>
+      <% end %>
+      <% if !@field.is_readonly? && !@field.is_disabled? && can_see_the_create_button? %>
+        <%= a_link create_path,
+          icon: 'heroicons/outline/plus',
+          'data-target': 'create',
+          'data-turbo-frame': '_top',
+          style: :primary,
+          color: :primary do %>
+          <%= t('jav.create_new_item', item: @field.name.downcase ) %>
+        <% end %>
+      <% end %>
+    <% end %>
+
+    <% c.with_body do %>
+      <div class="py-8 flex justify-center items-center">
+        <%= empty_state by_association: params[:related_name].present? %>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>

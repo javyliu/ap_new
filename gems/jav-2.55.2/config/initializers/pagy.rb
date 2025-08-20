@@ -1,0 +1,21 @@
+require "pagy/extras/trim"
+require "pagy/extras/countless"
+
+# For locales without native pagy i18n support
+def pagy_locale_path(file_name)
+  Jav::Engine.root.join("lib", "generators", "jav", "templates", "locales", "pagy", file_name)
+end
+
+extra_locales = [
+  {locale: "en"},
+  {locale: "es"},
+  {locale: "fr"},
+  {locale: "nb"},
+  {locale: "pt-BR"},
+  {locale: "pt"},
+  {locale: "tr"},
+  {locale: "nn", filepath: pagy_locale_path("nn.yml")},
+  {locale: "ro", filepath: pagy_locale_path("ro.yml")}
+]
+
+Pagy::I18n.send(:build, *extra_locales)

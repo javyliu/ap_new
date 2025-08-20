@@ -1,0 +1,35 @@
+<%= field_wrapper **field_wrapper_args, full_width: true do %>
+  <%= content_tag :div,
+    class: "relative block overflow-x-auto max-w-full",
+    data: {
+      controller: "trix-field",
+      trix_field_target: "controller",
+      resource_name: resource_name,
+      resource_id: resource_id,
+      attachments_disabled: @field.attachments_disabled,
+      attachment_key: @field.attachment_key,
+      hide_attachment_filename: @field.hide_attachment_filename,
+      hide_attachment_filesize: @field.hide_attachment_filesize,
+      hide_attachment_url: @field.hide_attachment_url,
+    } do %>
+    <%= content_tag 'trix-editor',
+      class: "trix-content #{@field.get_html(:classes, view: view, element: :wrapper)}",
+      data: {
+        "trix-field-target": "editor",
+        **@field.get_html(:data, view: view, element: :input)
+      },
+      input: trix_id,
+      placeholder: @field.placeholder do %>
+      <%= sanitize @field.value.to_s %>
+    <% end %>
+    <%= @form.text_area @field.id,
+      value: @field.value,
+      class: classes("w-full hidden!"),
+      data: @field.get_html(:data, view: view, element: :input),
+      disabled: disabled?,
+      id: trix_id,
+      placeholder: @field.placeholder,
+      style: @field.get_html(:style, view: view, element: :input)
+    %>
+  <% end %>
+<% end %>

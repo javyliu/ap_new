@@ -1,0 +1,43 @@
+# frozen_string_literal: true
+
+class Jav::ItemSwitcherComponent < Jav::BaseComponent
+  include Turbo::FramesHelper
+
+  attr_reader :resource, :reflection, :index, :item, :view
+
+  def initialize(resource: nil, reflection: nil, item: nil, index: nil, view: nil, form: nil)
+    super
+    @resource = resource
+    @reflection = reflection
+    @form = form
+    @index = index
+    @item = item
+    @view = view
+  end
+
+  def form
+    @form || nil
+  end
+
+  def render?
+    # Stops rendering if the field should be hidden in reflections
+    return false if item.is_field? && (in_reflection? && item.hidden_in_reflection?)
+
+    return false if item.is_main_panel?
+
+    true
+  end
+
+  def in_reflection?
+    @reflection.present?
+  end
+
+  def tab_group_component
+    Jav::TabGroupComponent.new resource: @resource, group: item.hydrate(view: view), index: index, params: params, form: form, view: view, tabs_style: item.style
+  end
+
+  def field_component
+    final_item = item.dup.hydrate(resource: @resource, model: @resource.model, user: resource.user, view: view)
+    final_item.component_for_view(@view).new(field: final_item, resource: @resource, index: index, form: form)
+  end
+end

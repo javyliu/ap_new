@@ -1,0 +1,32 @@
+<div class="flex items-center justify-center" data-component="<%= self.class.to_s.underscore %>">
+  <% if display_inline? %>
+    <div class="flex max-w-xs rounded-sm">
+      <%= render Jav::Index::Ordering::ButtonComponent.new resource: @resource, reflection: @reflection, direction: :higher, svg: 'arrow-up' %>
+      <%= render Jav::Index::Ordering::ButtonComponent.new resource: @resource, reflection: @reflection, direction: :lower, svg: 'arrow-down' %>
+      <%= render Jav::Index::Ordering::ButtonComponent.new resource: @resource, reflection: @reflection, direction: :to_top, svg: 'download-solid-reversed' %>
+      <%= render Jav::Index::Ordering::ButtonComponent.new resource: @resource, reflection: @reflection, direction: :to_bottom, svg: 'download-solid' %>
+    </div>
+  <% else %>
+    <div class="popover inline-block"
+      data-controller="popover"
+      data-popover-translate-x="<%= Jav.configuration.resource_controls_placement == :left ? '20%' : '-100%' %>"
+      data-popover-translate-y="-32px"
+      data-action="mouseover->popover#mouseOver mouseout->popover#mouseOut"
+      >
+      <%= button_tag nil,
+        title: t('jav.order.reorder_record').capitalize,
+        class: 'flex items-center',
+        data: {
+          'tippy': 'tooltip',
+        } do
+      %>
+      <%= helpers.svg('switch-vertical', class: 'text-gray-400 h-6 hover:text-gray-600') %>
+    <% end %>
+    <div class="flex hidden absolute max-w-xs bg-white rounded-sm p-2" data-popover-target="content">
+      <%= render Jav::Index::Ordering::ButtonComponent.new resource: @resource, reflection: @reflection, direction: :higher, svg: 'arrow-up' %>
+      <%= render Jav::Index::Ordering::ButtonComponent.new resource: @resource, reflection: @reflection, direction: :lower, svg: 'arrow-down' %>
+      <%= render Jav::Index::Ordering::ButtonComponent.new resource: @resource, reflection: @reflection, direction: :to_top, svg: 'download-solid-reversed' %>
+      <%= render Jav::Index::Ordering::ButtonComponent.new resource: @resource, reflection: @reflection, direction: :to_bottom, svg: 'download-solid' %>
+    </div>
+  <% end %>
+</div>

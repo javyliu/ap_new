@@ -1,0 +1,5 @@
+<%= field_wrapper **field_wrapper_args do %>
+  <% if @field.value.present? %>
+    <%= image_tag @field.value, style: 'max-width: 340px;width:100%;' %>
+  <% end %>
+<% end %>

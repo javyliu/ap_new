@@ -1,0 +1,62 @@
+<div
+  class="jav-sidebar fixed z-[60] t-0 application-sidebar w-64 flex-1 border-r bg-none h-[calc(100vh-4rem)] bg-application lg:bg-transparent <%= 'print:hidden' if Jav.configuration.hide_layout_when_printing %> <%= @sidebar_open ? 'flex' : 'hidden' %>"
+  data-sidebar-target="<%= stimulus_target %>"
+  data-transition-enter="transition ease-out duration-100"
+  data-transition-enter-start="transform opacity-0 -translate-x-full"
+  data-transition-enter-end="transform opacity-100 translate-x-0"
+  data-transition-leave="transition ease-in duration-75"
+  data-transition-leave-start="transform opacity-100 translate-x-0"
+  data-transition-leave-end="transform opacity-0 -translate-x-full"
+>
+  <div class="flex flex-col w-full h-full">
+    <div class="flex-1 flex flex-col justify-between overflow-auto h-full pt-3 mac-styled-scrollbar">
+      <div class="space-y-6 mb-4">
+        <%= render Jav::Sidebar::LinkComponent.new label: 'Get started', path: helpers.jav.root_path, active: :exclusive if Rails.env.development? && Jav.configuration.home_path.nil? %>
+
+        <% if Jav::App.has_main_menu? %>
+          <% Jav::App.main_menu.items.each do |item| %>
+            <%= render Jav::Sidebar::ItemSwitcherComponent.new item: item %>
+          <% end %>
+        <% else %>
+
+          <% if dashboards.present? %>
+            <div>
+              <%= render Jav::Sidebar::HeadingComponent.new label: t('jav.dashboards'), icon: helpers.svg('dashboards', class: 'h-4') %>
+
+              <div class="w-full space-y-1">
+                <% dashboards.sort_by { |r| r.navigation_label }.each do |dashboard| %>
+                  <%= render Jav::Sidebar::LinkComponent.new label: dashboard.navigation_label, path: dashboard.navigation_path %>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+
+          <div>
+            <%= render Jav::Sidebar::HeadingComponent.new label: t('jav.resources'), icon: helpers.svg('resources', class: 'h-4') %>
+
+            <div class="w-full space-y-1">
+              <% resources.sort_by { |r| r.navigation_label }.each do |resource| %>
+                <%= render Jav::Sidebar::LinkComponent.new label: resource.navigation_label, path: helpers.resources_path(resource: resource) %>
+              <% end %>
+            </div>
+          </div>
+
+          <% if tools.present? %>
+            <div>
+              <%= render Jav::Sidebar::HeadingComponent.new label: t('jav.tools'), icon: helpers.svg('tools', class: 'h-4') %>
+
+              <div class="w-full space-y-1">
+                <% tools.each do |partial| %>
+                  <%= render partial: "/jav/sidebar/items/#{partial}" %>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+
+        <%= render partial: "/jav/partials/sidebar_extra" %>
+      </div>
+    </div>
+    <%= render Jav::SidebarProfileComponent.new user: helpers._current_user %>
+  </div>
+</div>

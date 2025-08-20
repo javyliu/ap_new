@@ -1,0 +1,7 @@
+<%= javascript_tag nonce: true do %>
+  window.Jav = window.Jav || { configuration: {} }
+  Jav.configuration.timezone = '<%= Jav.configuration.timezone %>'
+  Jav.configuration.root_path = '<%= root_path_without_url %>'
+  Jav.configuration.search_debounce = '<%= Jav.configuration.search_debounce %>'
+  Jav.configuration.cookies_key = '<%= Jav::COOKIES_KEY %>'
+<% end %>

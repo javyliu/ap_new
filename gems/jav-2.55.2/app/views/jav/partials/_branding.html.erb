@@ -1,0 +1,6 @@
+<%= content_tag(:style, nonce: content_security_policy_nonce) do %>
+  :root {
+    <%= Jav.configuration.branding.css_colors %>
+  }
+<% end %>
+<%= favicon_link_tag Jav.configuration.branding.favicon %>

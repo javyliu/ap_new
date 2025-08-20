@@ -1,0 +1,3 @@
+<%= turbo_stream.append "alerts" do %>
+  <%= render Jav::FlashAlertsComponent.new flashes: flash.discard %>
+<% end %>

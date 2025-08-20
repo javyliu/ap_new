@@ -1,0 +1,18 @@
+<% if method.present? %>
+  <%= button_to path,
+    form_class: "flex-1 flex",
+    class: button_classes,
+    target: target,
+    title: title,
+    method: method,
+    params: params do %>
+    <%= helpers.svg(icon, class: 'h-4 mr-1') if icon.present? %> <%= label %>
+  <% end %>
+<% else %>
+  <%= link_to path,
+    class: button_classes,
+    target: target,
+    title: title do %>
+    <%= helpers.svg(icon, class: 'h-4 mr-1') if icon.present? %> <%= label %>
+  <% end %>
+<% end %>

@@ -1,0 +1,16 @@
+<% if item.is_a? Jav::Menu::Link %>
+  <%= render Jav::Sidebar::LinkComponent.new label: item.name, path: item.path, target: item.target, data: item.data, icon: item.icon %>
+<% end %>
+<% if item.is_a? Jav::Menu::Resource %>
+  <%= render Jav::Sidebar::LinkComponent.new label: item.navigation_label, path: helpers.resources_path(resource: resource, **item.fetch_params), data: item.data, icon: item.icon %>
+<% end %>
+<% if item.is_a? Jav::Menu::Dashboard %>
+  <%= render Jav::Sidebar::LinkComponent.new label: item.navigation_label, path: dashboard.navigation_path, data: item.data, icon: item.icon %>
+<% end %>
+<% if item.is_a? Jav::Menu::Section %>
+  <%= render Jav::Sidebar::SectionComponent.new item: item %>
+<% end %>
+<% if item.is_a? Jav::Menu::Group %>
+  <%= render Jav::Sidebar::GroupComponent.new item: item %>
+<% end %>
+

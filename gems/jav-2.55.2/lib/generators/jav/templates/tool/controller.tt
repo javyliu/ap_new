@@ -1,0 +1,2 @@
+class Jav::ToolsController < Jav::ApplicationController
+end

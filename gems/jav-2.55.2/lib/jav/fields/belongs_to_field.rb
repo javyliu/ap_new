@@ -1,0 +1,268 @@
+module Jav
+  module Fields
+    # The field can be in multiple scenarios where it needs different types of data and displays the state differently.
+    # For example the non-polymorphic, non-searchable variant is the easiest to support. You only need to populate a simple select with the ID of the associated record and the list of records.
+    # For the searchable polymorphic variant you need to provide the type of the association (Post, Project, Team), the label of the associated record ("Cool post title") and the ID of that record.
+    # Furthermore, the way Jav works, it needs to do some queries on the back-end to fetch the required information.
+    #
+    # Field scenarios:
+    # 1. Create new record
+    #   List of records
+    # 2. Create new record as association
+    #   List of records, the ID
+    # 3. Create new searchable record
+    #   Nothing really. The records will be fetched from the search API
+    # 4. Create new searchable record as association
+    #   The associated record label and ID. The records will be fetched from the search API
+    # 5. Create new polymorphic record
+    #   Type & ID
+    # 6. Create new polymorphic record as association
+    #   Type, list of records, and ID
+    # 7. Create new polymorphic searchable record
+    #   Type, Label and ID
+    # 8. Create new polymorphic searchable record as association
+    #   Type, Label and ID
+    # 9. Edit a record
+    #   List of records & ID
+    # 10. Edit a record as searchable
+    #   Label and ID
+    # 11. Edit a record as an association
+    #   List and ID
+    # 12. Edit a record as an searchable association
+    #   Label and ID
+    # 13. Edit a polymorphic record
+    #   Type, List of records & ID
+    # 14. Edit a polymorphic record as searchable
+    #   Type, Label and ID
+    # 15. Edit a polymorphic record as an association
+    #   Type, List and ID
+    # 16. Edit a polymorphic record as an searchable association
+    #   Type, Label and ID
+    # Also all of the above with a namespaced model `Course/Link`
+
+    # Variants
+    # 1. Select belongs to
+    # 2. Searchable belongs to
+    # 3. Select Polymorphic belongs to
+    # 4. Searchable Polymorphic belongs to
+
+    # Requirements
+    # - list
+    # - ID
+    # - label
+    # - Type
+    # - foreign_key
+    # - foreign_key for poly type
+    # - foreign_key for poly id
+    # - is_disabled?
+
+    class BelongsToField < BaseField
+      include Jav::Fields::Concerns::UseResource
+
+      attr_accessor :target
+
+      attr_reader :polymorphic_as, :relation_method, :types, :allow_via_detaching, :attach_scope, :polymorphic_help, :searchable # for Polymorphic associations
+
+      def initialize(id, **args, &block)
+        args[:placeholder] ||= I18n.t("jav.choose_an_option")
+
+        super
+
+        @searchable = args[:searchable] == true
+        @polymorphic_as = args[:polymorphic_as]
+        @types = args[:types]
+        @relation_method = id.to_s.parameterize.underscore
+        @allow_via_detaching = args[:allow_via_detaching] == true
+        @attach_scope = args[:attach_scope]
+        @polymorphic_help = args[:polymorphic_help]
+        @target = args[:target]
+        @use_resource = args[:use_resource] || nil
+      end
+
+      def value
+        if is_polymorphic?
+          # Get the value from the pre-filled assoociation record
+          super(polymorphic_as)
+        else
+          # Get the value from the pre-filled assoociation record
+          super(relation_method)
+        end
+      end
+
+      # The value
+      def field_value
+        value.send(database_value)
+      rescue StandardError
+        nil
+      end
+
+      # What the user sees in the text field
+      def field_label
+        value.send(target_resource.class.title)
+      rescue StandardError
+        nil
+      end
+
+      def options
+        values_for_type
+      end
+
+      def values_for_type(model = nil)
+        resource = target_resource
+        resource = App.get_resource_by_model_name model if model.present?
+
+        query = resource.class.query_scope
+
+        query = Jav::Hosts::AssociationScopeHost.new(block: attach_scope, query: query, parent: get_model).handle if attach_scope.present?
+
+        query.all.map do |mod|
+          [mod.send(resource.class.title), mod.id]
+        end
+      end
+
+      def database_value
+        target_resource.id
+      rescue StandardError
+        nil
+      end
+
+      def type_input_foreign_key
+        return unless is_polymorphic?
+
+        "#{foreign_key}_type"
+      end
+
+      def id_input_foreign_key
+        if is_polymorphic?
+          "#{foreign_key}_id"
+        else
+          foreign_key
+        end
+      end
+
+      def is_polymorphic?
+        polymorphic_as.present?
+      rescue StandardError
+        false
+      end
+
+      def foreign_key
+        return polymorphic_as if polymorphic_as.present?
+
+        if @model.present?
+          get_model_class(@model).reflections[@relation_method].foreign_key
+        elsif @resource.present? && @resource.model_class.reflections[@relation_method].present?
+          @resource.model_class.reflections[@relation_method].foreign_key
+        end
+      end
+
+      def reflection_for_key(key)
+        get_model_class(get_model).reflections[key.to_s]
+      rescue StandardError
+        nil
+      end
+
+      # Get the model reflection instance
+      def reflection
+        reflection_for_key(id)
+      rescue StandardError
+        nil
+      end
+
+      def relation_model_class
+        @resource.model_class
+      end
+
+      def label
+        value.send(target_resource.class.title)
+      end
+
+      def to_permitted_param
+        return [:"#{polymorphic_as}_type", :"#{polymorphic_as}_id"] if polymorphic_as.present?
+
+        foreign_key.to_sym
+      end
+
+      def fill_field(model, key, value, params)
+        return model unless model.methods.include? key.to_sym
+
+        if polymorphic_as.present?
+          valid_model_class = valid_polymorphic_class params["#{polymorphic_as}_type"]
+
+          model.send(:"#{polymorphic_as}_type=", valid_model_class)
+
+          # If the type is blank, reset the id too.
+          if valid_model_class.blank?
+            model.send(:"#{polymorphic_as}_id=", nil)
+          else
+            model.send(:"#{polymorphic_as}_id=", params["#{polymorphic_as}_id"])
+          end
+        else
+          model.send(:"#{key}=", value)
+        end
+
+        model
+      end
+
+      def valid_polymorphic_class(possible_class)
+        types.find do |type|
+          type.to_s == possible_class.to_s
+        end
+      end
+
+      def database_id
+        # If the field is a polymorphic value, return the polymorphic_type as key and pre-fill the _id in fill_field.
+        return "#{polymorphic_as}_type" if polymorphic_as.present?
+
+        foreign_key
+      rescue StandardError
+        id
+      end
+
+      def target_resource
+        return use_resource if use_resource.present?
+
+        if is_polymorphic?
+          return App.get_resource_by_model_name(value.class) if value.present?
+
+          return nil
+
+        end
+
+        reflection_key = polymorphic_as || id
+
+        if @model.class.reflect_on_association(reflection_key).klass.present?
+          App.get_resource_by_model_name @model.class.reflect_on_association(reflection_key).klass.to_s
+        elsif @model.class.reflect_on_association(reflection_key).options[:class_name].present?
+          App.get_resource_by_model_name @model.class.reflect_on_association(reflection_key).options[:class_name]
+        else
+          App.get_resource_by_name reflection_key.to_s
+        end
+      end
+
+      def get_model
+        return @model if @model.present?
+
+        @resource.model
+      rescue StandardError
+        nil
+      end
+
+      def name
+        return polymorphic_as.to_s.humanize if polymorphic_as.present? && view == :index
+
+        super
+      end
+
+      private
+
+      def get_model_class(model)
+        if model.instance_of?(Class)
+          model
+        else
+          model.class
+        end
+      end
+    end
+  end
+end

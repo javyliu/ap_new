@@ -1,0 +1,4 @@
+# frozen_string_literal: true
+
+class Jav::Fields::<%= class_name %>Field::EditComponent < Jav::Fields::EditComponent
+end

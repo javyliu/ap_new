@@ -1,0 +1,33 @@
+module Jav
+  module Fields
+    class BooleanGroupField < BaseField
+      attr_reader :options
+
+      def initialize(id, **args, &block)
+        super
+
+        @options = args[:options].presence || {}
+      end
+
+      def to_permitted_param
+        ["#{id}": []]
+      end
+
+      def fill_field(model, key, value, params)
+        new_value = {}
+
+        # Filter out the empty ("") value boolean group generates
+        value = value.compact_blank
+
+        # Cast values to booleans
+        options.each_key do |id|
+          new_value[id] = value.include? id.to_s
+        end
+
+        model[id] = new_value
+
+        model
+      end
+    end
+  end
+end

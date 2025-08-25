@@ -122,7 +122,7 @@ module Jav
 
       def valid_attachment_name(record, association_name)
         association_exists = get_record_associations(record).keys.any? do |name|
-          ["#{association_name}_attachment", "#{association_name}_attachments"].include?(name)
+          [ "#{association_name}_attachment", "#{association_name}_attachments" ].include?(name)
         end
         association_name if association_exists
       end
@@ -292,7 +292,7 @@ module Jav
     end
 
     def available_view_types
-      view_types = [:table]
+      view_types = [ :table ]
 
       view_types << :grid if get_grid_fields.present?
       view_types << :map if map_view.present?
@@ -302,7 +302,7 @@ module Jav
 
     def attachment_fields
       get_field_definitions.select do |field|
-        [Jav::Fields::FileField, Jav::Fields::FilesField].include? field.class
+        [ Jav::Fields::FileField, Jav::Fields::FilesField ].include? field.class
       end
     end
 
@@ -355,9 +355,9 @@ module Jav
 
     def cache_hash(parent_model)
       if parent_model.present?
-        [model, file_hash, parent_model]
+        [ model, file_hash, parent_model ]
       else
-        [model, file_hash]
+        [ model, file_hash ]
       end
     end
 
@@ -383,7 +383,7 @@ module Jav
           end
         end
 
-        [field, value]
+        [ field, value ]
       end.compact_blank
 
       default_values.each do |field, value|
@@ -444,7 +444,7 @@ module Jav
     def avatar
       return avatar_field.to_image if avatar_field.respond_to? :to_image
 
-      return avatar_field.value.variant(resize_to_limit: [480, 480]) if avatar_field.type == "file"
+      return avatar_field.value.variant(resize_to_limit: [ 480, 480 ]) if avatar_field.type == "file"
 
       avatar_field.value
     rescue StandardError

@@ -26,14 +26,14 @@ class Jav::AlertComponent < ViewComponent::Base
     result = 'max-w-lg w-full shadow-lg px-4 py-3 rounded-sm relative border text-white pointer-events-auto'
 
     result += if is_error?
-                ' bg-red-400 border-red-600'
-              elsif is_success?
-                ' bg-green-500 border-green-600'
-              elsif is_warning?
-                ' bg-orange-400 border-orange-600'
-              elsif is_info?
-                ' bg-blue-400 border-blue-600'
-              end
+      ' bg-red-400 border-red-600'
+    elsif is_success?
+      ' bg-green-500 border-green-600'
+    elsif is_warning?
+      ' bg-orange-400 border-orange-600'
+    elsif is_info?
+      ' bg-blue-400 border-blue-600'
+    end
 
     result
   end

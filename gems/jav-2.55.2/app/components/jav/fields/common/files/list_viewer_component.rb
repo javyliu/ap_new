@@ -35,7 +35,7 @@ class Jav::Fields::Common::Files::ListViewerComponent < ViewComponent::Base
   end
 
   def available_view_types
-    [:list, :grid]
+    [ :list, :grid ]
   end
 
   def view_type_component(file)

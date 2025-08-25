@@ -1,4 +1,5 @@
 class WelcomeController < ApplicationController
+  allow_unauthenticated_access only: [ :index ]
   # USERS = { "admin" => "helloworld" }
 
   # before_action :authenticate

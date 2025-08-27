@@ -1,0 +1,60 @@
+name: CI and Deploy
+
+on:
+  push:
+    branches:
+      - release
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 部署到远程服务器
+      - name: Deploy to server
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SERVER_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          echo "SERVER_IP: ${{ secrets.SERVER_IP }}"
+          echo "SERVER_USER: ${{ secrets.SERVER_USER }}"
+          # 设置 SSH 密钥
+          echo "$SSH_PRIVATE_KEY" > private_key
+          chmod 600 private_key
+
+          # 登录服务器并部署
+          ssh -o StrictHostKeyChecking=no -i private_key $SERVER_USER@$SERVER_IP << 'EOF'
+            if ! command -v docker &> /dev/null; then
+              echo "Docker not found, installing..."
+              sudo dnf update -y
+              sudo dnf install -y dnf-plugins-core
+              sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+              sudo dnf install -y docker-ce docker-ce-cli containerd.io
+              sudo systemctl start docker
+              sudo systemctl enable docker
+              # 将用户添加到 docker 组（避免每次运行 docker 都需要 sudo）
+              sudo usermod -aG docker ${{ secrets.SERVER_USER }}
+            else
+              echo "Docker already installed"
+            fi
+
+            # 确保项目目录存在
+            mkdir -p ~/my-rails-app
+
+            # 停止并删除旧容器（如果存在）
+            # docker stop my-rails-app || true
+            # docker rm my-rails-app || true
+
+            # 拉取最新镜像
+
+            # 运行新容器，使用 volume 挂载项目文件
+
+          EOF
+
+          # 清理临时文件
+          # rm private_key

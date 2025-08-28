@@ -12,7 +12,7 @@ jobs:
     steps:
       # 检出代码
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # 部署到远程服务器
       - name: Deploy to server

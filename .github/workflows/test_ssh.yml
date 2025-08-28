@@ -1,5 +1,5 @@
 name: CI and Deploy
-
+# push 到 release 分支时自动部署, 直接使用run命令
 on:
   push:
     branches:
@@ -32,13 +32,14 @@ jobs:
             if ! command -v docker &> /dev/null; then
               echo "Docker not found, installing..."
               sudo dnf update -y
-              sudo dnf install -y dnf-plugins-core
               sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-              sudo dnf install -y docker-ce docker-ce-cli containerd.io
+              sudo dnf install -y docker
               sudo systemctl start docker
               sudo systemctl enable docker
               # 将用户添加到 docker 组（避免每次运行 docker 都需要 sudo）
               sudo usermod -aG docker ${{ secrets.SERVER_USER }}
+              # 刷新用户组
+              newgrp docker
             else
               echo "Docker already installed"
             fi
@@ -57,4 +58,4 @@ jobs:
           EOF
 
           # 清理临时文件
-          # rm private_key
+          rm private_key

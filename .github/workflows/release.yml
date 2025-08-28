@@ -1,0 +1,87 @@
+name: release a docker image
+on:
+  release:
+    types: [published]
+permissions:
+  contents: read
+  packages: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Debug info
+        run: |
+          echo "当前分支: ${{ github.ref }}"
+          echo "工作目录: ${{ github.workspace }}"
+          echo "提交SHA: ${{ github.sha }}"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        # docker 中 为 docker.io/javyliu/xxx:xxx
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ github.repository }}
+            ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha,prefix=sha-
+          flavor: |
+            latest=true
+      - name: Output meta results
+        run: |
+          echo "生成的标签: ${{ steps.meta.outputs.tags }}"
+          echo "标签列表: ${{ steps.meta.outputs.tags-list }}"
+          echo "标签JSON: ${{ steps.meta.outputs.json }}"
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+      - name: deploy to server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_KEY }}
+          script: |
+            if ! command -v docker &> /dev/null; then
+              echo "Docker not found, installing..."
+              sudo dnf update -y
+              sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+              sudo dnf install -y docker
+              sudo systemctl start docker
+              sudo systemctl enable docker
+              # 将用户添加到 docker 组（避免每次运行 docker 都需要 sudo）
+              sudo usermod -aG docker ${{ secrets.SERVER_USER }}
+              # 刷新用户组
+              newgrp docker
+            else
+              echo "Docker already installed"
+            fi
+
+            # 确保项目目录存在
+            mkdir -p ~/rails_app
+
+      - name: Build completion
+        run: |
+          echo "构建完成! 镜像已推送到以下标签:"
+          echo "${{ steps.meta.outputs.tags }}"
